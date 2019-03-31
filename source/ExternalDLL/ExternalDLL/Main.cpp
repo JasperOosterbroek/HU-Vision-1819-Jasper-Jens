@@ -9,44 +9,124 @@
 #include "HereBeDragons.h"
 #include "ImageFactory.h"
 #include "DLLExecution.h"
+#include "basetimer.h"
 
 void drawFeatureDebugImage(IntensityImage &image, FeatureMap &features);
 bool executeSteps(DLLExecution * executor);
 
 int main(int argc, char * argv[]) {
-
-	ImageFactory::setImplementation(ImageFactory::DEFAULT);
-	//ImageFactory::setImplementation(ImageFactory::STUDENT);
-
-
-	ImageIO::debugFolder = "D:\\Users\\Rolf\\Downloads\\FaceMinMin";
-	ImageIO::isInDebugMode = true; //If set to false the ImageIO class will skip any image save function calls
+	int baseN = 50;
 
 
 
 
-	RGBImage * input = ImageFactory::newRGBImage();
-	if (!ImageIO::loadImage("D:\\Users\\Rolf\\Downloads\\TestA5.jpg", *input)) {
-		std::cout << "Image could not be loaded!" << std::endl;
-		system("pause");
-		return 0;
-	}
+	ImageIO::debugFolder = "C:\\Users\\Jens\\HBO-ICT\\Jaar 2\\Blok 3\\Vision\\Code\\HU-Vision-1819-Jasper-Jens\\testsets\\Set A\\TestSet Images\\Debug";
+	ImageIO::isInDebugMode = false; //If set to false the ImageIO class will skip any image save function calls
+
+	// maak een timer object aan
+	BaseTimer* bt = new BaseTimer();
+
+	for (int iteratorCount = 1; iteratorCount <= 10; iteratorCount++) {
+		ImageFactory::setImplementation(ImageFactory::DEFAULT);
+		// start de timer
+		bt->start();
+
+		for (int i = 0; i < iteratorCount * baseN; i++) {
+			// doe iets wat je wilt meten hoe lang het duurt
+			RGBImage * input = ImageFactory::newRGBImage();
+			if (!ImageIO::loadImage("C:\\Users\\Jens\\HBO-ICT\\Jaar 2\\Blok 3\\Vision\\Code\\HU-Vision-1819-Jasper-Jens\\testsets\\Set A\\TestSet Images\\child-1.png", *input)) {
+				std::cout << "Image could not be loaded!" << std::endl;
+				system("pause");
+				return 0;
+			}
 
 
-	ImageIO::saveRGBImage(*input, ImageIO::getDebugFileName("debug.png"));
+			ImageIO::saveRGBImage(*input, ImageIO::getDebugFileName("debug.png"));
 
-	DLLExecution * executor = new DLLExecution(input);
+			DLLExecution * executor = new DLLExecution(input);
 
 
-	if (executeSteps(executor)) {
-		std::cout << "Face recognition successful!" << std::endl;
-		std::cout << "Facial parameters: " << std::endl;
-		for (int i = 0; i < 16; i++) {
-			std::cout << (i+1) << ": " << executor->facialParameters[i] << std::endl;
+			if (executeSteps(executor)) {
+				std::cout << "Face recognition successful!" << std::endl;
+				std::cout << "Facial parameters: " << std::endl;
+				for (int i = 0; i < 16; i++) {
+					std::cout << (i + 1) << ": " << executor->facialParameters[i] << std::endl;
+				}
+			}
+			delete input;
+			delete executor;
+
 		}
-	}
 
-	delete executor;
+		// stop de timer
+		bt->stop();
+
+		// rapporteer door de elapsed...() functies aan te roepen
+		std::cout << " =================== DEFAULT IMPLEMENTATION ========================================\n";
+		std::cout << "Time for the operation was: " << bt->elapsedSeconds() << " seconds" << std::endl;
+		std::cout << "Time for the operation was: " << static_cast<double>(bt->elapsedMilliSeconds()) << " milli seconds" << std::endl;
+		std::cout << " ===================================================================================\n";
+
+
+		// sla de gegevens op in het timer object onder een label
+		bt->store("Test Default n = " + std::to_string(iteratorCount*baseN));
+
+
+		// doe het nog een keer of iets anders, wel eerst de timer resetten
+		bt->reset();
+
+
+		ImageFactory::setImplementation(ImageFactory::STUDENT);
+
+		// start de timer
+		bt->start();
+
+		for (int i = 0; i < iteratorCount*baseN; i++) {
+
+			// Student implementation
+			RGBImage * inputStudent = ImageFactory::newRGBImage();
+			if (!ImageIO::loadImage("C:\\Users\\Jens\\HBO-ICT\\Jaar 2\\Blok 3\\Vision\\Code\\HU-Vision-1819-Jasper-Jens\\testsets\\Set A\\TestSet Images\\child-1.png", *inputStudent)) {
+				std::cout << "Image could not be loaded!" << std::endl;
+				system("pause");
+				return 0;
+			}
+
+
+			ImageIO::saveRGBImage(*inputStudent, ImageIO::getDebugFileName("debug.png"));
+
+			DLLExecution * executorStudent = new DLLExecution(inputStudent);
+
+
+			if (executeSteps(executorStudent)) {
+				std::cout << "Face recognition successful!" << std::endl;
+				std::cout << "Facial parameters: " << std::endl;
+				for (int i = 0; i < 16; i++) {
+					std::cout << (i + 1) << ": " << executorStudent->facialParameters[i] << std::endl;
+				}
+			}
+		
+			delete inputStudent;
+			delete executorStudent;
+		}
+		// stop de timer
+		bt->stop();
+
+		std::cout << " =================== STUDENT IMPLEMENTATION ========================================\n";
+		std::cout << "Time for the operation was: " << bt->elapsedSeconds() << " seconds" << std::endl;
+		std::cout << "Time for the operation was: " << static_cast<double>(bt->elapsedMilliSeconds()) << " milli seconds" << std::endl;
+		std::cout << " ===================================================================================\n";
+
+		// sla de gegevens op in het timer object onder een label
+		bt->store("Test Student n = " + std::to_string(iteratorCount*baseN));
+
+	}
+	// bewaar de gegevens daarna in een bestand
+	bt->save("Speedtest.txt");
+
+	std::cout << "Klaar" << std::endl;
+
+	delete bt;
+	bt = nullptr;
 	system("pause");
 	return 1;
 }
